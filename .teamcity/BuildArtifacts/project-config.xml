@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" uuid="b072c747-90ac-45b5-a4ef-901986bd894e" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2018.1/project-config.xsd">
+  <name>Build artifacts</name>
+  <description>Build artifacts from source code</description>
+  <parameters />
+  <cleanup>
+    <policy type="builds" cleanup-level="ARTIFACTS">
+      <parameters>
+        <param name="keepBuilds.count" value="5" />
+      </parameters>
+    </policy>
+  </cleanup>
+</project>

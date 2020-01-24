@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" uuid="3203e1a6-f225-4328-9c1a-96037c7fc784" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2018.1/project-config.xsd">
+  <name>One Ring template for complex workflows</name>
+  <settings>
+    <options>
+      <option name="allowPersonalBuildTriggering" value="false" />
+      <option name="buildConfigurationType" value="DEPLOYMENT" />
+      <option name="cleanBuild" value="true" />
+    </options>
+    <parameters>
+      <param name="cluster.size.preset" value="Z" spec="select display='normal' description='These parameters overwrite corresponding lines from .ini files' label='Cluster size preset' data_1='Z' data_3='S' data_5='M' label_5='M (~20GB)' label_3='S (~5GB)' data_7='L' data_9='XL' label_9='XL (~200GB)' label_7='L (~100GB)' label_1='From build parameters'" />
+      <param name="deployment.cluster.id" value="" spec="text display='hidden' validationMode='any'" />
+      <param name="deployment.master.address" value="" spec="text display='hidden' validationMode='any'" />
+      <param name="deployment.params" value="YT1h" spec="text display='hidden' validationMode='not_empty'" />
+      <param name="deployment.uniq" value="" spec="text display='hidden' validationMode='any'" />
+    </parameters>
+    <build-runners>
+      <runner id="RUNNER_40" name="Select an ini preset" type="jetbrains_powershell">
+        <parameters>
+          <param name="jetbrains_powershell_execution" value="PS1" />
+          <param name="jetbrains_powershell_noprofile" value="true" />
+          <param name="jetbrains_powershell_scriptArguments" value="-preset %cluster.size.preset%" />
+          <param name="jetbrains_powershell_script_file" value="preset-params.ps1" />
+          <param name="jetbrains_powershell_script_mode" value="FILE" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+      <runner id="RUNNER_16" name="Replace ini files parameters" type="jetbrains_powershell">
+        <parameters>
+          <param name="jetbrains_powershell_execution" value="PS1" />
+          <param name="jetbrains_powershell_noprofile" value="true" />
+          <param name="jetbrains_powershell_scriptArguments" value="./settings -tcBuild %teamcity.build.id% -tcAddress %teamcity.serverUrl% -tcUser %system.teamcity.auth.userId% -tcPwd %system.teamcity.auth.password%" />
+          <param name="jetbrains_powershell_script_file" value="set-params.ps1" />
+          <param name="jetbrains_powershell_script_mode" value="FILE" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+      <runner id="RUNNER_2" name="PowerShell create cluster" type="jetbrains_powershell">
+        <parameters>
+          <param name="jetbrains_powershell_execution" value="PS1" />
+          <param name="jetbrains_powershell_noprofile" value="true" />
+          <param name="jetbrains_powershell_scriptArguments" value="./settings/aws.ini ./settings/create.ini -autoConfirm" />
+          <param name="jetbrains_powershell_script_file" value="create-cluster.ps1" />
+          <param name="jetbrains_powershell_script_mode" value="FILE" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+      <runner id="RUNNER_11" name="" type="_placeholder_">
+        <parameters />
+      </runner>
+      <runner id="RUNNER_3" name="PowerShell run job" type="jetbrains_powershell">
+        <parameters>
+          <param name="jetbrains_powershell_execution" value="PS1" />
+          <param name="jetbrains_powershell_noprofile" value="true" />
+          <param name="jetbrains_powershell_scriptArguments" value="./settings/aws.ini ./settings/run.ini -clusterUri %deployment.master.address% -clusterId %deployment.cluster.id% -params %deployment.params% -autoConfirm -wrapperStore" />
+          <param name="jetbrains_powershell_script_file" value="run-job.ps1" />
+          <param name="jetbrains_powershell_script_mode" value="FILE" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+      <runner id="RUNNER_4" name="PowerShell remove cluster" type="jetbrains_powershell">
+        <parameters>
+          <param name="jetbrains_powershell_execution" value="PS1" />
+          <param name="jetbrains_powershell_noprofile" value="true" />
+          <param name="jetbrains_powershell_scriptArguments" value="./settings/aws.ini -uniq %deployment.uniq% -autoConfirm" />
+          <param name="jetbrains_powershell_script_file" value="remove-cluster.ps1" />
+          <param name="jetbrains_powershell_script_mode" value="FILE" />
+          <param name="teamcity.step.mode" value="execute_always" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <vcs-settings>
+      <vcs-entry-ref root-id="one-ring-emr" />
+    </vcs-settings>
+    <requirements />
+    <build-triggers />
+    <artifact-dependencies>
+      <dependency id="ARTIFACT_DEPENDENCY_21" sourceBuildTypeId="OneRing" cleanDestination="false">
+        <revisionRule name="lastSuccessful" revision="latest.lastSuccessful" />
+        <artifact sourcePath="one-ring-dist.jar&#xD;&#xA;one-ring-cli.jar" />
+      </dependency>
+    </artifact-dependencies>
+    <cleanup />
+  </settings>
+</template>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<build-type xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" uuid="d7488401-0d32-4495-a0c5-9319d28cf4b6" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2018.1/project-config.xsd">
+  <name>Sample Process</name>
+  <description />
+  <settings ref="OneRingTemplate">
+    <parameters>
+      <param name="DELIMITER" value="" spec="text display='normal' validationMode='any'" />
+      <param name="INPUT_PATH" value="" spec="text description='Path to signals on S3' regexp='^s3://|[^/|]+/|[^/|]+/.+' validationMode='regex' display='prompt' validationMessage='Must point somewhere into a subdirectory in a bucket'" />
+      <param name="OUTPUT_PATH" value="" spec="text description='Path to place output on S3' regexp='^s3://|[^/|]+/|[^/|]+/.+' validationMode='regex' display='prompt' validationMessage='Must point somewhere into a subdirectory in a bucket'" />
+      <param name="PARTS" value="" spec="text description='Should be a multiple of cluster cores available for executors' regexp='^\d+$' validationMode='regex' display='prompt' validationMessage='A non-negative number'" />
+      <param name="TZ" value="" spec="text display='normal' validationMode='not_empty'" />
+    </parameters>
+    <build-runners order="RUNNER_40, RUNNER_16, RUNNER_2, RUNNER_14, RUNNER_3, RUNNER_4">
+      <runner id="RUNNER_14" name="Encode this build parameters to Base64" type="simpleRunner">
+        <parameters>
+          <param name="script.content"><![CDATA[#!/bin/bash
+
+PARAMS=`echo -e "INPUT_PATH=%INPUT_PATH%\nPARTS=%PARTS%\nDELIMITER=%DELIMITER%\nTZ=%TZ%\nOUTPUT_PATH=%OUTPUT_PATH%" | base64 -w0 -`
+echo "##teamcity[setParameter name='deployment.params' value='$PARAMS']"]]></param>
+          <param name="teamcity.step.mode" value="default" />
+          <param name="use.custom.script" value="true" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <vcs-settings>
+      <vcs-entry-ref root-id="one-ring-emr-settings-branch">
+        <checkout-rule rule="+:settings/" />
+        <checkout-rule rule="+:presets/" />
+      </vcs-entry-ref>
+    </vcs-settings>
+    <requirements />
+    <build-triggers />
+    <cleanup />
+  </settings>
+</build-type>
